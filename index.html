@@ -13,22 +13,23 @@
     let theWidth = 6;
     let theHeight = 6;
     let theNumColors = 3;
+    let theSolvedState = false;
     let theSelectedHexIdx = undefined;
-    let nexusColorValues = [
-        "#FF0000",
-        "#00FF00",
-        "#0000FF",
-        "#FFFF00",
-        "#FF00FF",
-        "#00FFFF"];
+    let brightColorValues = [
+        "#DD2222",
+        "#22DD22",
+        "#2222DD",
+        "#DDDD22",
+        "#DD22DD",
+        "#22DDDD"];
 
-    let hexColorValues = [
-        "#AA0000",
-        "#00AA00",
-        "#0000AA",
-        "#AAAA00",
-        "#AA00AA",
-        "#00AAAA"];
+    let dullColorValues = [
+        "#8D1616",
+        "#168D16",
+        "#16168D",
+        "#8D8D16",
+        "#8D168D",
+        "#168D8D"];
 
     function hexIndexToXY(hexIdx)
     {
@@ -69,39 +70,88 @@
 
         let nexusIdx = theNexusCoords[hexData.hexColorIdx];
 
-        let hexCoord = hexIndexToDoubledXY(hexIdx);
-        let nexusCoord = hexIndexToDoubledXY(nexusIdx);
+        let correctPos = true;
 
-        let distanceFromNexus = calcDistDoubled(hexCoord, nexusCoord);
+        if(nexusIdx !== hexIdx){
+            let hexCoord = hexIndexToDoubledXY(hexIdx);
+            let nexusCoord = hexIndexToDoubledXY(nexusIdx);
 
-        let correctPos = distanceFromNexus === hexData.hexNum;
+            let distanceFromNexus = calcDistDoubled(hexCoord, nexusCoord);
+            correctPos = distanceFromNexus === hexData.hexNum;
+        }
+
+        if(theSolvedState){
+            hexElement.style.borderColor = brightColorValues[hexData.hexColorIdx];
+        }
+        else if(hexIdx === nexusIdx || correctPos){
+            hexElement.style.borderColor = "#EEEEEE";
+        }
+        else{
+            hexElement.style.borderColor = "#666666";
+        }
 
         if(hexIdx === nexusIdx){
-            hexElement.style.background = nexusColorValues[hexData.hexColorIdx];
-            hexElement.style.borderColor = "#EEEEEE";
+            hexElement.style.background = brightColorValues[hexData.hexColorIdx];
             hexElement.firstChild.style.transform = "scale(1.5)";
             hexElement.firstChild.innerHTML = "X";
         }
         else{
             hexElement.firstChild.innerHTML = hexData.hexNum;
             if(correctPos){
-                hexElement.style.background = nexusColorValues[hexData.hexColorIdx];
-                hexElement.style.borderColor = "#EEEEEE";
+                hexElement.style.background = brightColorValues[hexData.hexColorIdx];
             }
             else {
-                hexElement.style.background = hexColorValues[hexData.hexColorIdx];
-                hexElement.style.borderColor = "#666666";
+                hexElement.style.background = dullColorValues[hexData.hexColorIdx];
             }
         }
     }
 
     function checkForSolve() {
-        //TODO
+        if(theSolvedState){
+            return;
+        }
+
+        let numHexes = theWidth * theHeight;
+
+        let solved = true;
+
+        for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx){
+            let hexData = theActiveGrid[hexIdx];
+
+            let nexusIdx = theNexusCoords[hexData.hexColorIdx];
+
+            if(hexIdx === nexusIdx){
+                continue;
+            }
+
+            let hexCoord = hexIndexToDoubledXY(hexIdx);
+            let nexusCoord = hexIndexToDoubledXY(nexusIdx);
+
+            let distanceFromNexus = calcDistDoubled(hexCoord, nexusCoord);
+
+            let correctPos = distanceFromNexus === hexData.hexNum;
+
+            if(!correctPos) {
+                solved = false;
+                break;
+            }
+        }
+
+        if(solved) {
+            theSolvedState = true;
+            for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx){
+                updateHexElement(hexIdx);
+            }
+        }
     }
 
 
     function onHexClicked(hexIdx)
     {
+        if(theSolvedState){
+            return;
+        }
+
         let isNexus = theNexusCoords.indexOf(hexIdx) !== -1;
 
         if(!isNexus)
@@ -119,6 +169,8 @@
 
                     updateHexElement(hexIdx);
                     updateHexElement(theSelectedHexIdx);
+
+                    checkForSolve();
                 }
 
                 theHexElements[theSelectedHexIdx].style.transform="";
@@ -256,6 +308,7 @@
 
     function makeGrid()
     {
+        theSolvedState = false;
         makeNewSolution();
         initActiveGrid();
 
@@ -369,9 +422,10 @@
     //width
     //height
     //numcolors
+    //prioritize high
 </div>
 <div class = "buttonbar">
-    <button class = "button" id = "button_startover" onclick="makeGrid(5,5)">Start Over</button>
+    <button class = "button" id = "button_startover" onclick="makeGrid()">Start Over</button>
     <button class = "button" id = "button_showsolution" onclick="solveGrid()">Show Solution</button>
 </div>
 </body>
