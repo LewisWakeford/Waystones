@@ -12,7 +12,8 @@
     let theHexElements = [];
     let theWidth = 6;
     let theHeight = 6;
-    let theNumColors = 3;
+    let theNumColors = 2;
+    let theFillMode = 1;
     let theSolvedState = false;
     let theSelectedHexIdx = undefined;
     let brightColorValues = [
@@ -80,10 +81,7 @@
             correctPos = distanceFromNexus === hexData.hexNum;
         }
 
-        if(theSolvedState){
-            hexElement.style.borderColor = brightColorValues[hexData.hexColorIdx];
-        }
-        else if(hexIdx === nexusIdx || correctPos){
+        if(hexIdx === nexusIdx || correctPos){
             hexElement.style.borderColor = "#EEEEEE";
         }
         else{
@@ -142,6 +140,7 @@
             for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx){
                 updateHexElement(hexIdx);
             }
+            document.getElementById("winPopup").classList.remove("hiddenPopup");
         }
     }
 
@@ -211,12 +210,11 @@
 
         let unusedIndexes = [];
 
-        for(let y = 0; y < theHeight; ++y)
+        let numHexes = theWidth * theHeight;
+
+        for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx)
         {
-            for(let x = 0; x < theWidth; ++x)
-            {
-                unusedIndexes.push((y * theWidth) + x);
-            }
+            unusedIndexes.push(hexIdx);
         }
 
         //Set nexus positions
@@ -228,51 +226,82 @@
             theSolvedGrid[chosenIdx] = {hexColorIdx: nexusIdx, hexNum: 0};
         }
 
-        let colorDistances = [];
+        if(theFillMode == 1){
+            //Smaller numbers: Color 0 places 1, Color 1 places 1, so on
+            let colorDistances = [];
 
-        for(let colorIdx = 0; colorIdx < theNumColors; ++colorIdx) {
-            colorDistances[colorIdx] = 1;
-        }
-
-        let colorIdx = 0;
-        let maxDistance = Math.floor(Math.sqrt(theWidth * theWidth + theHeight * theHeight));
-
-        while(unusedIndexes.length > 0)
-        {
-            let findDistance = colorDistances[colorIdx];
-
-            let found = false;
-
-            while(!found){
-                let nextHexIdxIdxForColor = findUnusedIndexIndexAtDistance(
-                    theNexusCoords[colorIdx],
-                    unusedIndexes,
-                    findDistance,
-                    theWidth
-                )
-
-                if(nextHexIdxIdxForColor !== undefined)
-                {
-                    let chosenIdx = unusedIndexes[nextHexIdxIdxForColor];
-                    unusedIndexes.splice(nextHexIdxIdxForColor, 1);
-                    theSolvedGrid[chosenIdx] = {hexColorIdx: colorIdx, hexNum: findDistance};
-                    found = true;
-                }
-                else
-                {
-                    findDistance++;
-
-                    if(findDistance > maxDistance)
-                    {
-                        findDistance = 1;
-                    }
-                }
+            for(let colorIdx = 0; colorIdx < theNumColors; ++colorIdx) {
+                colorDistances[colorIdx] = 1;
             }
 
-            colorIdx++;
-            if(colorIdx >= theNumColors)
+            let colorIdx = 0;
+            let maxDistance = Math.floor(Math.sqrt(theWidth * theWidth + theHeight * theHeight));
+
+            while(unusedIndexes.length > 0)
             {
-                colorIdx = 0;
+                let findDistance = colorDistances[colorIdx];
+
+                let found = false;
+
+                while(!found){
+                    let nextHexIdxIdxForColor = findUnusedIndexIndexAtDistance(
+                        theNexusCoords[colorIdx],
+                        unusedIndexes,
+                        findDistance,
+                        theWidth
+                    )
+
+                    if(nextHexIdxIdxForColor !== undefined)
+                    {
+                        let chosenIdx = unusedIndexes[nextHexIdxIdxForColor];
+                        unusedIndexes.splice(nextHexIdxIdxForColor, 1);
+                        theSolvedGrid[chosenIdx] = {hexColorIdx: colorIdx, hexNum: findDistance};
+                        found = true;
+                    }
+                    else
+                    {
+                        findDistance++;
+
+                        if(findDistance > maxDistance)
+                        {
+                            findDistance = 1;
+                        }
+                    }
+                }
+
+                colorIdx++;
+                if(colorIdx >= theNumColors)
+                {
+                    colorIdx = 0;
+                }
+            }
+        }
+        else
+        {
+            //Bigger numbers: Color 0 places 1,2,3,4,5,... Color 2 places 1,2,3,4,5,...
+            let colorIdx = 0;
+            let maxDistance = Math.floor(Math.sqrt(theWidth * theWidth + theHeight * theHeight));
+
+            while (unusedIndexes.length > 0) {
+                for (let findDistance = 1; findDistance <= maxDistance && unusedIndexes.length > 0; ++findDistance) {
+                    let nextHexIdxIdxForColor = findUnusedIndexIndexAtDistance(
+                        theNexusCoords[colorIdx],
+                        unusedIndexes,
+                        findDistance,
+                        theWidth
+                    );
+
+                    if (nextHexIdxIdxForColor !== undefined) {
+                        let chosenIdx = unusedIndexes[nextHexIdxIdxForColor];
+                        unusedIndexes.splice(nextHexIdxIdxForColor, 1);
+                        theSolvedGrid[chosenIdx] = {hexColorIdx: colorIdx, hexNum: findDistance};
+                    }
+                }
+
+                colorIdx++;
+                if (colorIdx >= theNumColors) {
+                    colorIdx = 0;
+                }
             }
         }
     }
@@ -306,9 +335,16 @@
         }
     }
 
-    function makeGrid()
+    function restartGame()
     {
+        if(theSolvedState){
+            document.getElementById("winPopup").classList.add("hiddenPopup");
+        }
         theSolvedState = false;
+        theWidth = Number(document.getElementById("widthSelector").value);
+        theHeight = Number(document.getElementById("heightSelector").value);
+        theNumColors = Number(document.getElementById("numColorsSelector").value);
+        theFillMode = Number(document.getElementById("fillModeSelector").value);
         makeNewSolution();
         initActiveGrid();
 
@@ -352,10 +388,17 @@
     }
 
     function solveGrid() {
-
+        let numHexes = theWidth * theHeight;
+        for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx) {
+            theActiveGrid[hexIdx] = theSolvedGrid[hexIdx];
+        }
+        for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx) {
+            updateHexElement(hexIdx);
+        }
+        checkForSolve();
     }
 
-    window.onload = function(){makeGrid();};
+    window.onload = function(){restartGame();};
 </script>
 <style>
     body {
@@ -412,6 +455,34 @@
         background-color:#444444;
         color: #EEEEEE;
     }
+    .popupContainer
+    {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top:0;
+        left:0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none;
+    }
+    .winPopup
+    {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        background-color: #000000;
+        opacity: 75%;
+        font-size: xxx-large;
+    }
+    .hiddenPopup
+    {
+        visibility: hidden;
+    }
+
 </style>
 <body>
 <h1>WAYSTONES</h1>
@@ -419,14 +490,40 @@
 <div id = "thehexgrid" class = "hexgrid">
 </div>
 <div class = "settingsbar">
-    //width
-    //height
-    //numcolors
-    //prioritize high
+    <label for="widthSelector">Width:</label>
+    <select id="widthSelector">
+        <option value="6" selected="selected">6</option>
+        <option value="8">8</option>
+        <option value="10">10</option>
+        <option value="12">12</option>
+    </select>
+    <label for="heightSelector">Width:</label>
+    <select id="heightSelector">
+        <option value="6" selected="selected">6</option>
+        <option value="8">8</option>
+        <option value="10">10</option>
+        <option value="12">12</option>
+    </select>
+    <label for="numColorsSelector">Num Colors:</label>
+    <select id="numColorsSelector">
+        <option value="2">2</option>
+        <option value="3" selected="selected">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+    </select>
+    <label for="fillModeSelector">Fill Mode:</label>
+    <select id ="fillModeSelector">
+        <option value="1">More Low Numbers</option>
+        <option value="2" selected="selected">More High Numbers</option>
+    </select>
 </div>
 <div class = "buttonbar">
-    <button class = "button" id = "button_startover" onclick="makeGrid()">Start Over</button>
+    <button class = "button" id = "button_startover" onclick="restartGame()">Start Over</button>
     <button class = "button" id = "button_showsolution" onclick="solveGrid()">Show Solution</button>
+</div>
+<div class="popupContainer">
+    <div id = "winPopup" class = "winPopup hiddenPopup">SOLVED</div>
 </div>
 </body>
 </html>
