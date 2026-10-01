@@ -82,24 +82,24 @@
         }
 
         if(hexIdx === nexusIdx || correctPos){
-            hexElement.style.borderColor = "#EEEEEE";
+            hexElement.style.background = "#EEEEEE";
         }
         else{
-            hexElement.style.borderColor = "#666666";
+            hexElement.style.background = "#666666";
         }
 
         if(hexIdx === nexusIdx){
-            hexElement.style.background = brightColorValues[hexData.hexColorIdx];
-            hexElement.firstChild.style.transform = "scale(1.5)";
-            hexElement.firstChild.innerHTML = "X";
+            hexElement.myContent.style.background = brightColorValues[hexData.hexColorIdx];
+            hexElement.myText.style.transform = "scale(1.5)";
+            hexElement.myText.innerHTML = "X";
         }
         else{
             hexElement.firstChild.innerHTML = hexData.hexNum;
             if(correctPos){
-                hexElement.style.background = brightColorValues[hexData.hexColorIdx];
+                hexElement.myContent.style.background = brightColorValues[hexData.hexColorIdx];
             }
             else {
-                hexElement.style.background = dullColorValues[hexData.hexColorIdx];
+                hexElement.myContent.style.background = dullColorValues[hexData.hexColorIdx];
             }
         }
     }
@@ -157,11 +157,10 @@
         {
             if(theSelectedHexIdx === undefined){
                 theSelectedHexIdx = hexIdx;
-                theHexElements[theSelectedHexIdx].style.transform="scale(1.2)";
+                theHexElements[theSelectedHexIdx].style.transform="scale(1.3)";
+                theHexElements[theSelectedHexIdx].myContent.transform="scale(0.9)";
+                theHexElements[theSelectedHexIdx].style.background="#EEEEEE";
                 theHexElements[theSelectedHexIdx].style.zIndex="1";
-                theHexElements[theSelectedHexIdx].style.borderColor="#EEEEEE";
-                theHexElements[theSelectedHexIdx].style.borderStyle="double";
-                theHexElements[theSelectedHexIdx].style.borderWidth="6px";
             }
             else{
                 if(theSelectedHexIdx !== hexIdx)
@@ -180,9 +179,8 @@
                     updateHexElement(theSelectedHexIdx);
                 }
                 theHexElements[theSelectedHexIdx].style.transform="";
+                theHexElements[theSelectedHexIdx].myContent.style.transform="";
                 theHexElements[theSelectedHexIdx].style.zIndex="";
-                theHexElements[theSelectedHexIdx].style.borderStyle="";
-                theHexElements[theSelectedHexIdx].style.borderWidth="";
                 theSelectedHexIdx = undefined;
             }
         }
@@ -415,7 +413,7 @@
                 let hexIdx = xyToHexIndex(x, y);
 
                 const hex = document.createElement("div");
-                hex.className = "hex";
+                hex.className = "hexborder";
                 hex.style.position = "absolute";
                 hex.style.left = xPos + 'vmin';
                 hex.style.top = yPos + 'vmin';
@@ -423,10 +421,18 @@
                 hex.style.height = hexHeight + 'vmin';
                 hex.onclick = function(){onHexClicked(hexIdx)};
 
+                const hexContent = document.createElement("div");
+                hexContent.className = "hex";
+                hexContent.style.width = "80%";
+                hexContent.style.height = "80%";
+
                 const text = document.createElement("span");
                 text.className = "num";
 
-                hex.appendChild(text);
+                hexContent.appendChild(text);
+                hex.appendChild(hexContent);
+                hex.myText = text;
+                hex.myContent = hexContent;
                 hexGrid.appendChild(hex);
                 theHexElements[hexIdx] = hex;
                 updateHexElement(hexIdx);
@@ -468,14 +474,19 @@
         aspect-ratio: 1.0/cos(30deg);
         margin:auto;
     }
+    .hexborder
+    {
+        display: flex;
+        clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
+        box-sizing:border-box;
+        justify-content: center;
+        align-items: center;
+        background-color:#444444;
+    }
     .hex
     {
         display: flex;
-        border-radius: 50% / 25%;
-        corner-shape: bevel;
-        border-style: solid;
-        border-color:#EEEEEE;
-        border-width:3px;
+        clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
         box-sizing:border-box;
         font-family: Arial, Helvetica, sans-serif;
         font-weight: bold;
@@ -509,8 +520,8 @@
         position: absolute;
         top:0;
         left:0;
-        width: 100%;
-        height: 100%;
+        width: 100vmin;
+        height: 100vmin;
         z-index: 2;
         pointer-events: none;
     }
