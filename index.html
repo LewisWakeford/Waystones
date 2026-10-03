@@ -464,8 +464,17 @@
         margin-top:auto;
         text-align: center;
         align-content: center;
-        height:10vmin;
         box-sizing: border-box;
+    }
+    .contentframe
+    {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        width: 100%;
+        height: 90%;
     }
     .hexgrid
     {
@@ -541,72 +550,76 @@
 </style>
 <body>
 <h1>WAYSTONES</h1>
-<div id = "thehexgrid" class = "hexgrid">
-</div>
-<div class = "buttonbar">
-    <label for="widthSelector">Width:</label>
-    <select id="widthSelector">
-        <option value="6" selected="selected">6</option>
-        <option value="8">8</option>
-        <option value="10">10</option>
-        <option value="12">12</option>
-    </select>
-    <label for="heightSelector">Height:</label>
-    <select id="heightSelector">
-        <option value="6" selected="selected">6</option>
-        <option value="8">8</option>
-        <option value="10">10</option>
-        <option value="12">12</option>
-    </select>
-    <label for="numColorsSelector">Num Colors:</label>
-    <select id="numColorsSelector">
-        <option value="2" selected="selected">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-    </select>
-    <label for="fillModeSelector">Difficulty:</label>
-    <select id ="fillModeSelector">
-        <option value="1" selected="selected">Easy</option>
-        <option value="2">Medium</option>
-        <option value="3">Hard</option>
-    </select>
-</div>
-<div class="buttonbar">
-    <button class = "button" id = "button_startover" onclick="restartGame()">New Puzzle</button>
-    <button class = "button" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
-</div>
-<div class="popupContainer">
-    <div id = "winPopup" class = "popup hiddenPopup"><h2>SOLVED</h2></div>
-    <div id = "startPopup" class = "popup">
-        <h2>How to Play</h2>
-        <p>
-            Each hexagon has a color and a number.
-            One hexagon of each color is the neXus (the one with the X on it).
-        </p>
-        <p>
-            You can swap two hexagons by clicking one and then the other.
-            The neXus cannot be moved.
-        </p>
-        <p>
-            When a hexagon's number matches its distance from the neXus of the same color, it will light up.
-            The goal of the game is to have all hexagons light up at once.
-            There may be more than one correct solution.
-        </p>
-        <p>
-            Settings can be adjusted beneath the grid.
-            Currently they are set to an easy tutorial game with just two colors.
-            It is recommended to move up to three colors and increase the Difficulty to "Medium" once you understand the rules for a reasonable challenge,
-            then change the Difficulty to "Hard" once you've really gotten the hang of the game.
-            After that, feel free to start messing around with more complex grids.
-        </p>
-        <p>
-            Good luck and have fun!
-        </p>
-        <button onclick="document.getElementById('startPopup').classList.add('hiddenPopup')">
-            Close Instructions
-        </button>
+<div id = "thecontentframe" class = "contentframe">
+    <div id = "thehexgrid" class = "hexgrid">
+    </div>
+    <div class = "buttonbar">
+        <label for="widthSelector">Width:</label>
+        <select id="widthSelector">
+            <option value="6" selected="selected">6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+        </select>
+        <label for="heightSelector">Height:</label>
+        <select id="heightSelector">
+            <option value="6" selected="selected">6</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+        </select>
+        <label for="numColorsSelector">Num Colors:</label>
+        <select id="numColorsSelector">
+            <option value="2" selected="selected">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+        </select>
+        <label for="fillModeSelector">Difficulty:</label>
+        <select id ="fillModeSelector">
+            <option value="1" selected="selected">Easy</option>
+            <option value="2">Medium</option>
+            <option value="3">Hard</option>
+        </select>
+    </div>
+    <div class="buttonbar">
+        <button class = "button" id = "button_startover" onclick="restartGame()">New Puzzle</button>
+        <button class = "button" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
+    </div>
+    <div class="popupContainerContainer">
+        <div class="popupContainer">
+            <div id = "winPopup" class = "popup hiddenPopup"><h2>SOLVED</h2></div>
+            <div id = "startPopup" class = "popup">
+                <h2>How to Play</h2>
+                <p>
+                    Each hexagon has a color and a number.
+                    One hexagon of each color is the neXus (the one with the X on it).
+                </p>
+                <p>
+                    You can swap two hexagons by clicking one and then the other.
+                    The neXus cannot be moved.
+                </p>
+                <p>
+                    When a hexagon's number matches its distance from the neXus of the same color, it will light up.
+                    The goal of the game is to have all hexagons light up at once.
+                    There may be more than one correct solution.
+                </p>
+                <p>
+                    Settings can be adjusted beneath the grid.
+                    Currently they are set to an easy tutorial game with just two colors.
+                    It is recommended to move up to three colors and increase the Difficulty to "Medium" once you understand the rules for a reasonable challenge,
+                    then change the Difficulty to "Hard" once you've really gotten the hang of the game.
+                    After that, feel free to start messing around with more complex grids.
+                </p>
+                <p>
+                    Good luck and have fun!
+                </p>
+                <button onclick="document.getElementById('startPopup').classList.add('hiddenPopup')">
+                    Close Instructions
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 </body>
