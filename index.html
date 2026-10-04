@@ -378,47 +378,38 @@
             hexGrid.removeChild(hexGrid.lastChild);
         }
 
-        let xOffset = 0;
-        let yOffset = 0;
-        let xGap = 0;
-        let yGap = 0;
-        let hexHeight = 0;
+        let root = document.querySelector(":root");
+        root.style.setProperty("--hexGridXCount", theWidth);
+        root.style.setProperty("--hexGridYCount", theHeight);
 
-
-        const aspectRatio = Math.cos(Math.PI * 30 / 180);
-
-        if(theHeight > theWidth)
-        {
-            xGap = 80 / (theHeight + 0.5);
-            yGap = xGap * aspectRatio;
-            hexHeight = xGap * (1.0 / aspectRatio);
-            xOffset = 0.5 * xGap * (theHeight - theWidth);
-            yOffset = 0;
-        }
-        else
-        {
-            xGap = 80 / (theWidth + 0.5);
-            yGap = xGap * aspectRatio;
-            hexHeight = xGap * (1.0 / aspectRatio);
-            xOffset = 0;
-            yOffset = 0.5 * yGap * (theWidth - theHeight);
-        }
+        let wider = theWidth >= theHeight;
 
         for (let y = 0; y < theHeight; ++y) {
-            let xFudge = (y % 2 === 1) ? xGap * 0.5 : 0.0;
             for(let x = 0; x < theWidth; ++x) {
-                let xPos = xOffset + xFudge + (xGap * x);
-                let yPos = yOffset + (yGap * y);
 
                 let hexIdx = xyToHexIndex(x, y);
 
                 const hex = document.createElement("div");
                 hex.className = "hexborder";
-                hex.style.position = "absolute";
-                hex.style.left = xPos + 'vmin';
-                hex.style.top = yPos + 'vmin';
-                hex.style.width = xGap + 'vmin';
-                hex.style.height = hexHeight + 'vmin';
+
+                if(wider)
+                {
+                    hex.classList.add("hexWide");
+                }
+                else
+                {
+                    hex.classList.add("hexTall");
+                }
+
+                hex.style.setProperty("--xCoord", x);
+                hex.style.setProperty("--yCoord", y);
+
+                if(y % 2 === 1)
+                {
+                    hex.style.setProperty("--xFudge", 0.5);
+                }
+
+
                 hex.onclick = function(){onHexClicked(hexIdx)};
 
                 const hexContent = document.createElement("div");
@@ -454,6 +445,13 @@
     window.onload = function(){restartGame();};
 </script>
 <style>
+    :root{
+        --hexGridWidth:95;
+        --hexGridHeight:80;
+        --hexGridXCount:6;
+        --hexGridYCount:6;
+        --hexAspect:cos(30deg);
+    }
     body {
         font-family: Arial, Helvetica, sans-serif;
         color: #EEEEEE;
@@ -465,6 +463,7 @@
         text-align: center;
         align-content: center;
         box-sizing: border-box;
+        font-size:4vh;
     }
     .contentframe
     {
@@ -479,18 +478,48 @@
     .hexgrid
     {
         position: relative;
-        width: 80vmin;
-        aspect-ratio: 1.0/cos(30deg);
-        margin:auto;
+        height: calc(var(--hexGridWidth) * 1vh);
+        width: calc(var(--hexGridHeight) * 1vw);
+        margin:0;
     }
     .hexborder
     {
+        --xCoord:0;
+        --yCoord:0;
+        --xFudge:0.0;
         display: flex;
         clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
         box-sizing:border-box;
         justify-content: center;
         align-items: center;
         background-color:#444444;
+        position: absolute;
+    }
+    @media screen and (min-aspect-ratio: 1.0)
+    {
+        .hexWide
+        {
+            height: calc((var(--hexGridHeight)/var(--hexGridYCount))*1vh);
+            aspect-ratio: var(--hexAspect);
+            left: calc((((var(--xFudge) * (var(--hexGridWidth)/var(--hexGridXCount)))) +
+                (var(--xCoord) * (var(--hexGridWidth)/var(--hexGridXCount))))*1vh);
+            top: calc(((var(--yCoord) * (var(--hexAspect)*(var(--hexGridWidth)/var(--hexGridXCount)))) +
+                (0.5 * (var(--hexAspect)*(var(--hexGridWidth)/var(--hexGridXCount))) * (var(--hexGridXCount) - var(--hexGridYCount))))*1vh);
+        }
+        .hexTall
+        {
+            width: calc((var(--hexGridWidth)/var(--hexGridYCount))*1vh);
+            aspect-ratio: var(--hexAspect);
+            left: calc(( (var(--xFudge) * (var(--hexGridWidth)/var(--hexGridYCount))) +
+                (var(--xCoord) * (var(--hexGridWidth)/var(--hexGridYCount))) +
+                (0.5 * (var(--hexAspect)*(var(--hexGridWidth)/var(--hexGridYCount))) * (var(--hexGridYCount) - var(--hexGridXCount)))
+            )*1vh);
+            top: calc((var(--yCoord) * (var(--hexAspect)*(var(--hexGridWidth)/var(--hexGridYCount))))*1vh);
+        }
+    }
+    @media not screen and (min-aspect-ratio: 1.0)
+    {
+
     }
     .hex
     {
@@ -509,9 +538,32 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        height:4vmin;
+        flex-wrap: wrap;
+        width: 100%;
+        height:5vh;
     }
-    .buttonbar > .button
+    .buttonbarElement
+    {
+        display: flex;
+        flex-direction: row;
+        align-content: center;
+        justify-content: center;
+        font-size: 2vh;
+        font-family: Arial, Helvetica, sans-serif;
+        margin-left: 5%;
+        margin-right: 5%
+    }
+    .dropdown
+    {
+        box-sizing: border-box;
+        width: auto;
+        border-style: solid;
+        border-color: #EEEEEE;
+        border-width: 2px;
+        background-color:#444444;
+        color: #EEEEEE;
+    }
+    .buttonbarButton
     {
         box-sizing: border-box;
         width: auto;
@@ -550,6 +602,8 @@
         background-color: #000000;
         opacity: 75%;
         pointer-events: all;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 3vh;
     }
     .hiddenPopup
     {
@@ -563,38 +617,46 @@
     <div id = "thehexgrid" class = "hexgrid">
     </div>
     <div class = "buttonbar">
-        <label for="widthSelector">Width:</label>
-        <select id="widthSelector">
-            <option value="6" selected="selected">6</option>
-            <option value="8">8</option>
-            <option value="10">10</option>
-            <option value="12">12</option>
-        </select>
-        <label for="heightSelector">Height:</label>
-        <select id="heightSelector">
-            <option value="6" selected="selected">6</option>
-            <option value="8">8</option>
-            <option value="10">10</option>
-            <option value="12">12</option>
-        </select>
-        <label for="numColorsSelector">Num Colors:</label>
-        <select id="numColorsSelector">
-            <option value="2" selected="selected">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-        </select>
-        <label for="fillModeSelector">Difficulty:</label>
-        <select id ="fillModeSelector">
-            <option value="1" selected="selected">Easy</option>
-            <option value="2">Medium</option>
-            <option value="3">Hard</option>
-        </select>
+        <span class = "buttonbarElement">
+            <label for="widthSelector">Width</label>
+            <select id="widthSelector" class = "dropdown buttonbarElement">
+                <option value="6" selected="selected">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+            </select>
+        </span>
+        <span class = "buttonbarElement">
+            <label for="heightSelector">Height</label>
+            <select id="heightSelector" class = "dropdown buttonbarElement">
+                <option value="6" selected="selected">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+            </select>
+        </span>
+        <span class = "buttonbarElement">
+            <label for="numColorsSelector">Colors</label>
+            <select id="numColorsSelector" class = "dropdown buttonbarElement">
+                <option value="2" selected="selected">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+        </span>
+        <span class = "buttonbarElement">
+            <label for="fillModeSelector">Difficulty</label>
+            <select id ="fillModeSelector" class = "dropdown buttonbarElement">
+                <option value="1" selected="selected">Easy</option>
+                <option value="2">Medium</option>
+                <option value="3">Hard</option>
+            </select>
+        </span>
     </div>
     <div class="buttonbar">
-        <button class = "button" id = "button_startover" onclick="restartGame()">New Puzzle</button>
-        <button class = "button" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
+        <button class = "buttonbarButton buttonbarElement" id = "button_startover" onclick="restartGame()">New Puzzle</button>
+        <button class = "buttonbarButton buttonbarElement" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
     </div>
     <div class="popupContainerContainer">
         <div class="popupContainer">
@@ -630,7 +692,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 </body>
 </html>
