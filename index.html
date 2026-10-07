@@ -4,6 +4,11 @@
     <title>WAYSTONES</title>
 </head>
 <script>
+    //TODO LIST:
+    //* Help popup looks a bit crap on mobile
+    //* Text inside the hexes is too small on mobile
+    //* menu bar could us a touch up on both but especially on mobile
+    //* whole page grows too tall on mobile, forcing you to scroll
 
     //some kind of global list of hexes
     let theSolvedGrid = [];
@@ -468,9 +473,10 @@
         height: calc(var(--hexGridHeight));
         width: calc(var(--hexGridWidth));
         margin:0;
-        --oneHexHeightBasedOnHeight:calc(var(--hexGridHeight) / var(--hexGridYCount));
-        --oneHexHeightBasedOnWidth:calc((var(--hexGridWidth) / var(--hexGridXCount)) /
-            var(--hexAspect));
+        --hexGridXCountLayout:calc(var(--hexGridXCount) + 0.5);
+        --hexGridYCountLayout:calc(var(--hexGridYCount) - ((var(--hexGridYCount) - 1) * (1.0 - var(--hexAspect))));
+        --oneHexHeightBasedOnHeight:calc(var(--hexGridHeight) / var(--hexGridYCountLayout));
+        --oneHexHeightBasedOnWidth:calc((var(--hexGridWidth) / var(--hexGridXCountLayout)) / var(--hexAspect));
 
         /*use the smaller height, as that's the one that respects the stricter dimension*/
         --oneHexHeight:min(var(--oneHexHeightBasedOnHeight),
@@ -478,11 +484,11 @@
         --oneHexWidth: calc(var(--oneHexHeight) * var(--hexAspect));
 
         /*Add an extra .5 because every other hex row is indented*/
-        --hexGridXUsedSpace:calc(var(--oneHexWidth) * (var(--hexGridXCount) + 0.5));
+        --hexGridXUsedSpace:calc(var(--oneHexWidth) * var(--hexGridXCountLayout));
         --hexGridXFreeSpace:calc(var(--hexGridWidth) - var(--hexGridXUsedSpace));
         --hexGridXOffset:max(calc(var(--hexGridXFreeSpace) * 0.5),0px);
 
-        --hexGridYUsedSpace:calc(var(--oneHexHeight) * (var(--hexGridYCount)));
+        --hexGridYUsedSpace:calc(var(--oneHexHeight) * (var(--hexGridYCountLayout)));
         --hexGridYFreeSpace:calc(var(--hexGridHeight) - var(--hexGridYUsedSpace));
         --hexGridYOffset:max(calc(var(--hexGridYFreeSpace) * 0.5),0px);
 
@@ -491,7 +497,7 @@
     }
     .hexOuter
     {
-        --xCoord:2;
+        --xCoord:0;
         --yCoord:0;
         --xFudge:0.0;
         display: flex;
