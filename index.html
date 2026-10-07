@@ -382,24 +382,13 @@
         root.style.setProperty("--hexGridXCount", theWidth);
         root.style.setProperty("--hexGridYCount", theHeight);
 
-        let wider = theWidth >= theHeight;
-
         for (let y = 0; y < theHeight; ++y) {
             for(let x = 0; x < theWidth; ++x) {
 
                 let hexIdx = xyToHexIndex(x, y);
 
                 const hex = document.createElement("div");
-                hex.className = "hexborder";
-
-                if(wider)
-                {
-                    hex.classList.add("hexWide");
-                }
-                else
-                {
-                    hex.classList.add("hexTall");
-                }
+                hex.className = "hexOuter";
 
                 hex.style.setProperty("--xCoord", x);
                 hex.style.setProperty("--yCoord", y);
@@ -413,9 +402,7 @@
                 hex.onclick = function(){onHexClicked(hexIdx)};
 
                 const hexContent = document.createElement("div");
-                hexContent.className = "hex";
-                hexContent.style.width = "80%";
-                hexContent.style.height = "80%";
+                hexContent.className = "hexInner";
 
                 const text = document.createElement("span");
                 text.className = "num";
@@ -446,8 +433,8 @@
 </script>
 <style>
     :root{
-        --hexGridWidth:95;
-        --hexGridHeight:80;
+        --hexGridWidth:calc(95 * 1vw);
+        --hexGridHeight:calc(80 * 1vh);
         --hexGridXCount:6;
         --hexGridYCount:6;
         --hexAspect:cos(30deg);
@@ -465,7 +452,7 @@
         box-sizing: border-box;
         font-size:4vh;
     }
-    .contentframe
+    .contentFrame
     {
         display: flex;
         flex-direction: column;
@@ -475,16 +462,36 @@
         width: 100%;
         height: 90%;
     }
-    .hexgrid
+    .hexGrid
     {
         position: relative;
-        height: calc(var(--hexGridWidth) * 1vh);
-        width: calc(var(--hexGridHeight) * 1vw);
+        height: calc(var(--hexGridHeight));
+        width: calc(var(--hexGridWidth));
         margin:0;
+        --oneHexHeightBasedOnHeight:calc(var(--hexGridHeight) / var(--hexGridYCount));
+        --oneHexHeightBasedOnWidth:calc((var(--hexGridWidth) / var(--hexGridXCount)) /
+            var(--hexAspect));
+
+        /*use the smaller height, as that's the one that respects the stricter dimension*/
+        --oneHexHeight:min(var(--oneHexHeightBasedOnHeight),
+            var(--oneHexHeightBasedOnWidth));
+        --oneHexWidth: calc(var(--oneHexHeight) * var(--hexAspect));
+
+        /*Add an extra .5 because every other hex row is indented*/
+        --hexGridXUsedSpace:calc(var(--oneHexWidth) * (var(--hexGridXCount) + 0.5));
+        --hexGridXFreeSpace:calc(var(--hexGridWidth) - var(--hexGridXUsedSpace));
+        --hexGridXOffset:max(calc(var(--hexGridXFreeSpace) * 0.5),0px);
+
+        --hexGridYUsedSpace:calc(var(--oneHexHeight) * (var(--hexGridYCount)));
+        --hexGridYFreeSpace:calc(var(--hexGridHeight) - var(--hexGridYUsedSpace));
+        --hexGridYOffset:max(calc(var(--hexGridYFreeSpace) * 0.5),0px);
+
+        --hexXGap:var(--oneHexWidth);
+        --hexYGap:calc(var(--oneHexHeight) - (2.0 * (var(--oneHexHeight) - var(--oneHexWidth))));
     }
-    .hexborder
+    .hexOuter
     {
-        --xCoord:0;
+        --xCoord:2;
         --yCoord:0;
         --xFudge:0.0;
         display: flex;
@@ -494,34 +501,12 @@
         align-items: center;
         background-color:#444444;
         position: absolute;
+        width:var(--oneHexWidth);
+        height:var(--oneHexHeight);
+        left:calc(var(--hexGridXOffset) + (var(--hexXGap) * (var(--xCoord) + var(--xFudge))));
+        top:calc(var(--hexGridYOffset) + (var(--hexYGap) * var(--yCoord)));
     }
-    @media screen and (min-aspect-ratio: 1.0)
-    {
-        .hexWide
-        {
-            height: calc((var(--hexGridHeight)/var(--hexGridYCount))*1vh);
-            aspect-ratio: var(--hexAspect);
-            left: calc((((var(--xFudge) * (var(--hexGridWidth)/var(--hexGridXCount)))) +
-                (var(--xCoord) * (var(--hexGridWidth)/var(--hexGridXCount))))*1vh);
-            top: calc(((var(--yCoord) * (var(--hexAspect)*(var(--hexGridWidth)/var(--hexGridXCount)))) +
-                (0.5 * (var(--hexAspect)*(var(--hexGridWidth)/var(--hexGridXCount))) * (var(--hexGridXCount) - var(--hexGridYCount))))*1vh);
-        }
-        .hexTall
-        {
-            width: calc((var(--hexGridWidth)/var(--hexGridYCount))*1vh);
-            aspect-ratio: var(--hexAspect);
-            left: calc(( (var(--xFudge) * (var(--hexGridWidth)/var(--hexGridYCount))) +
-                (var(--xCoord) * (var(--hexGridWidth)/var(--hexGridYCount))) +
-                (0.5 * (var(--hexAspect)*(var(--hexGridWidth)/var(--hexGridYCount))) * (var(--hexGridYCount) - var(--hexGridXCount)))
-            )*1vh);
-            top: calc((var(--yCoord) * (var(--hexAspect)*(var(--hexGridWidth)/var(--hexGridYCount))))*1vh);
-        }
-    }
-    @media not screen and (min-aspect-ratio: 1.0)
-    {
-
-    }
-    .hex
+    .hexInner
     {
         display: flex;
         clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
@@ -532,8 +517,10 @@
         justify-content: center;
         align-items: center;
         background-color:#444444;
+        width:80%;
+        height:80%;
     }
-    .buttonbar
+    .menuBar
     {
         display: flex;
         justify-content: center;
@@ -542,7 +529,7 @@
         width: 100%;
         height:5vh;
     }
-    .buttonbarElement
+    .menuBarElement
     {
         display: flex;
         flex-direction: row;
@@ -563,7 +550,7 @@
         background-color:#444444;
         color: #EEEEEE;
     }
-    .buttonbarButton
+    .menuBarButton
     {
         box-sizing: border-box;
         width: auto;
@@ -613,31 +600,31 @@
 </style>
 <body>
 <h1>WAYSTONES</h1>
-<div id = "thecontentframe" class = "contentframe">
-    <div id = "thehexgrid" class = "hexgrid">
+<div id = "thecontentframe" class = "contentFrame">
+    <div id = "thehexgrid" class = "hexGrid">
     </div>
-    <div class = "buttonbar">
-        <span class = "buttonbarElement">
+    <div class = "menuBar">
+        <span class = "menuBarElement">
             <label for="widthSelector">Width</label>
-            <select id="widthSelector" class = "dropdown buttonbarElement">
+            <select id="widthSelector" class = "dropdown menuBarElement">
                 <option value="6" selected="selected">6</option>
                 <option value="8">8</option>
                 <option value="10">10</option>
                 <option value="12">12</option>
             </select>
         </span>
-        <span class = "buttonbarElement">
+        <span class = "menuBarElement">
             <label for="heightSelector">Height</label>
-            <select id="heightSelector" class = "dropdown buttonbarElement">
+            <select id="heightSelector" class = "dropdown menuBarElement">
                 <option value="6" selected="selected">6</option>
                 <option value="8">8</option>
                 <option value="10">10</option>
                 <option value="12">12</option>
             </select>
         </span>
-        <span class = "buttonbarElement">
+        <span class = "menuBarElement">
             <label for="numColorsSelector">Colors</label>
-            <select id="numColorsSelector" class = "dropdown buttonbarElement">
+            <select id="numColorsSelector" class = "dropdown menuBarElement">
                 <option value="2" selected="selected">2</option>
                 <option value="3">3</option>
                 <option value="4">4</option>
@@ -645,18 +632,18 @@
                 <option value="6">6</option>
             </select>
         </span>
-        <span class = "buttonbarElement">
+        <span class = "menuBarElement">
             <label for="fillModeSelector">Difficulty</label>
-            <select id ="fillModeSelector" class = "dropdown buttonbarElement">
+            <select id ="fillModeSelector" class = "dropdown menuBarElement">
                 <option value="1" selected="selected">Easy</option>
                 <option value="2">Medium</option>
                 <option value="3">Hard</option>
             </select>
         </span>
     </div>
-    <div class="buttonbar">
-        <button class = "buttonbarButton buttonbarElement" id = "button_startover" onclick="restartGame()">New Puzzle</button>
-        <button class = "buttonbarButton buttonbarElement" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
+    <div class="menuBar">
+        <button class = "menuBarButton menuBarElement" id = "button_startover" onclick="restartGame()">New Puzzle</button>
+        <button class = "menuBarButton menuBarElement" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
     </div>
     <div class="popupContainerContainer">
         <div class="popupContainer">
