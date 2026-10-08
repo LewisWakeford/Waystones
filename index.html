@@ -4,13 +4,6 @@
     <title>WAYSTONES</title>
 </head>
 <script>
-    //TODO LIST:
-    //* Help popup looks a bit crap on mobile
-    //* Text inside the hexes is too small on mobile
-    //* menu bar could us a touch up on both but especially on mobile
-    //* whole page grows too tall on mobile, forcing you to scroll
-
-    //some kind of global list of hexes
     let theSolvedGrid = [];
     let theActiveGrid = [];
     let theNexusCoords = [];
@@ -95,11 +88,12 @@
 
         if(hexIdx === nexusIdx){
             hexElement.myContent.style.background = brightColorValues[hexData.hexColorIdx];
-            hexElement.myText.style.transform = "scale(1.5)";
+            hexElement.myText.classList.add("nexus");
             hexElement.myText.innerHTML = "X";
         }
         else{
-            hexElement.firstChild.innerHTML = hexData.hexNum;
+            hexElement.myText.class = "num";
+            hexElement.myText.innerHTML = hexData.hexNum;
             if(correctPos){
                 hexElement.myContent.style.background = brightColorValues[hexData.hexColorIdx];
             }
@@ -403,7 +397,6 @@
                     hex.style.setProperty("--xFudge", 0.5);
                 }
 
-
                 hex.onclick = function(){onHexClicked(hexIdx)};
 
                 const hexContent = document.createElement("div");
@@ -517,14 +510,23 @@
         display: flex;
         clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
         box-sizing:border-box;
-        font-family: Arial, Helvetica, sans-serif;
-        font-weight: bold;
-        font-size: large;
         justify-content: center;
         align-items: center;
         background-color:#444444;
         width:80%;
         height:80%;
+    }
+    .num
+    {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: calc(var(--oneHexHeight) * 0.4);
+        font-weight: bold;
+    }
+    .nexus
+    {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: calc(var(--oneHexHeight) * 0.5);
+        font-weight: bolder;
     }
     .menuBar
     {
@@ -541,10 +543,10 @@
         flex-direction: row;
         align-content: center;
         justify-content: center;
-        font-size: 2vh;
+        font-size: 2.5vh;
         font-family: Arial, Helvetica, sans-serif;
-        margin-left: 5%;
-        margin-right: 5%
+        margin-left:2mm;
+        margin-right:2mm;
     }
     .dropdown
     {
@@ -585,18 +587,42 @@
         align-items: center;
         justify-content: center;
         position: absolute;
-        width: 100vmin;
-        height: 100vmin;
+        width: 100%;
+        height: 100%;
     }
     .popup
     {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
         text-align: center;
         position: absolute;
         background-color: #000000;
         opacity: 75%;
         pointer-events: all;
         font-family: Arial, Helvetica, sans-serif;
-        font-size: 3vh;
+        font-size: medium;
+        max-height: 90%;
+    }
+    .popupParagraph
+    {
+        width: 80%;
+        height: 80%;
+        scroll-behavior: auto;
+        overflow-y: scroll;
+        font-size: 2vh;
+    }
+    .popupButton
+    {
+        box-sizing: border-box;
+        width: auto;
+        border-style: solid;
+        border-color: #EEEEEE;
+        border-width: 2px;
+        background-color:#444444;
+        color: #EEEEEE;
+        font-size: 4vh;
     }
     .hiddenPopup
     {
@@ -646,8 +672,6 @@
                 <option value="3">Hard</option>
             </select>
         </span>
-    </div>
-    <div class="menuBar">
         <button class = "menuBarButton menuBarElement" id = "button_startover" onclick="restartGame()">New Puzzle</button>
         <button class = "menuBarButton menuBarElement" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
     </div>
@@ -656,6 +680,7 @@
             <div id = "winPopup" class = "popup hiddenPopup"><h2>SOLVED</h2></div>
             <div id = "startPopup" class = "popup">
                 <h2>How to Play</h2>
+                <div class = "popupParagraph">
                 <p>
                     Each hexagon has a color and a number.
                     One hexagon of each color is the neXus (the one with the X on it).
@@ -679,7 +704,8 @@
                 <p>
                     Good luck and have fun!
                 </p>
-                <button onclick="document.getElementById('startPopup').classList.add('hiddenPopup')">
+                </div>
+                <button class="popupButton" onclick="document.getElementById('startPopup').classList.add('hiddenPopup')">
                     Close Instructions
                 </button>
             </div>
