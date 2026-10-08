@@ -4,8 +4,6 @@
     <title>WAYSTONES</title>
 </head>
 <script>
-
-    //some kind of global list of hexes
     let theSolvedGrid = [];
     let theActiveGrid = [];
     let theNexusCoords = [];
@@ -90,11 +88,12 @@
 
         if(hexIdx === nexusIdx){
             hexElement.myContent.style.background = brightColorValues[hexData.hexColorIdx];
-            hexElement.myText.style.transform = "scale(1.5)";
+            hexElement.myText.classList.add("nexus");
             hexElement.myText.innerHTML = "X";
         }
         else{
-            hexElement.firstChild.innerHTML = hexData.hexNum;
+            hexElement.myText.class = "num";
+            hexElement.myText.innerHTML = hexData.hexNum;
             if(correctPos){
                 hexElement.myContent.style.background = brightColorValues[hexData.hexColorIdx];
             }
@@ -378,53 +377,30 @@
             hexGrid.removeChild(hexGrid.lastChild);
         }
 
-        let xOffset = 0;
-        let yOffset = 0;
-        let xGap = 0;
-        let yGap = 0;
-        let hexHeight = 0;
-
-
-        const aspectRatio = Math.cos(Math.PI * 30 / 180);
-
-        if(theHeight > theWidth)
-        {
-            xGap = 80 / (theHeight + 0.5);
-            yGap = xGap * aspectRatio;
-            hexHeight = xGap * (1.0 / aspectRatio);
-            xOffset = 0.5 * xGap * (theHeight - theWidth);
-            yOffset = 0;
-        }
-        else
-        {
-            xGap = 80 / (theWidth + 0.5);
-            yGap = xGap * aspectRatio;
-            hexHeight = xGap * (1.0 / aspectRatio);
-            xOffset = 0;
-            yOffset = 0.5 * yGap * (theWidth - theHeight);
-        }
+        let root = document.querySelector(":root");
+        root.style.setProperty("--hexGridXCount", theWidth);
+        root.style.setProperty("--hexGridYCount", theHeight);
 
         for (let y = 0; y < theHeight; ++y) {
-            let xFudge = (y % 2 === 1) ? xGap * 0.5 : 0.0;
             for(let x = 0; x < theWidth; ++x) {
-                let xPos = xOffset + xFudge + (xGap * x);
-                let yPos = yOffset + (yGap * y);
 
                 let hexIdx = xyToHexIndex(x, y);
 
                 const hex = document.createElement("div");
-                hex.className = "hexborder";
-                hex.style.position = "absolute";
-                hex.style.left = xPos + 'vmin';
-                hex.style.top = yPos + 'vmin';
-                hex.style.width = xGap + 'vmin';
-                hex.style.height = hexHeight + 'vmin';
+                hex.className = "hexOuter";
+
+                hex.style.setProperty("--xCoord", x);
+                hex.style.setProperty("--yCoord", y);
+
+                if(y % 2 === 1)
+                {
+                    hex.style.setProperty("--xFudge", 0.5);
+                }
+
                 hex.onclick = function(){onHexClicked(hexIdx)};
 
                 const hexContent = document.createElement("div");
-                hexContent.className = "hex";
-                hexContent.style.width = "80%";
-                hexContent.style.height = "80%";
+                hexContent.className = "hexInner";
 
                 const text = document.createElement("span");
                 text.className = "num";
@@ -454,6 +430,13 @@
     window.onload = function(){restartGame();};
 </script>
 <style>
+    :root{
+        --hexGridWidth:calc(95 * 1vw);
+        --hexGridHeight:calc(80 * 1vh);
+        --hexGridXCount:6;
+        --hexGridYCount:6;
+        --hexAspect:cos(30deg);
+    }
     body {
         font-family: Arial, Helvetica, sans-serif;
         color: #EEEEEE;
@@ -465,8 +448,9 @@
         text-align: center;
         align-content: center;
         box-sizing: border-box;
+        font-size:4vh;
     }
-    .contentframe
+    .contentFrame
     {
         display: flex;
         flex-direction: column;
@@ -476,14 +460,52 @@
         width: 100%;
         height: 90%;
     }
-    .hexgrid
+    .hexGrid
     {
         position: relative;
-        width: 80vmin;
-        aspect-ratio: 1.0/cos(30deg);
-        margin:auto;
+        height: calc(var(--hexGridHeight));
+        width: calc(var(--hexGridWidth));
+        margin:0;
+        --hexGridXCountLayout:calc(var(--hexGridXCount) + 0.5);
+        --hexGridYCountLayout:calc(var(--hexGridYCount) - ((var(--hexGridYCount) - 1) * (1.0 - var(--hexAspect))));
+        --oneHexHeightBasedOnHeight:calc(var(--hexGridHeight) / var(--hexGridYCountLayout));
+        --oneHexHeightBasedOnWidth:calc((var(--hexGridWidth) / var(--hexGridXCountLayout)) / var(--hexAspect));
+
+        /*use the smaller height, as that's the one that respects the stricter dimension*/
+        --oneHexHeight:min(var(--oneHexHeightBasedOnHeight),
+            var(--oneHexHeightBasedOnWidth));
+        --oneHexWidth: calc(var(--oneHexHeight) * var(--hexAspect));
+
+        /*Add an extra .5 because every other hex row is indented*/
+        --hexGridXUsedSpace:calc(var(--oneHexWidth) * var(--hexGridXCountLayout));
+        --hexGridXFreeSpace:calc(var(--hexGridWidth) - var(--hexGridXUsedSpace));
+        --hexGridXOffset:max(calc(var(--hexGridXFreeSpace) * 0.5),0px);
+
+        --hexGridYUsedSpace:calc(var(--oneHexHeight) * (var(--hexGridYCountLayout)));
+        --hexGridYFreeSpace:calc(var(--hexGridHeight) - var(--hexGridYUsedSpace));
+        --hexGridYOffset:max(calc(var(--hexGridYFreeSpace) * 0.5),0px);
+
+        --hexXGap:var(--oneHexWidth);
+        --hexYGap:calc(var(--oneHexHeight) - (2.0 * (var(--oneHexHeight) - var(--oneHexWidth))));
     }
-    .hexborder
+    .hexOuter
+    {
+        --xCoord:0;
+        --yCoord:0;
+        --xFudge:0.0;
+        display: flex;
+        clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
+        box-sizing:border-box;
+        justify-content: center;
+        align-items: center;
+        background-color:#444444;
+        position: absolute;
+        width:var(--oneHexWidth);
+        height:var(--oneHexHeight);
+        left:calc(var(--hexGridXOffset) + (var(--hexXGap) * (var(--xCoord) + var(--xFudge))));
+        top:calc(var(--hexGridYOffset) + (var(--hexYGap) * var(--yCoord)));
+    }
+    .hexInner
     {
         display: flex;
         clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
@@ -491,27 +513,52 @@
         justify-content: center;
         align-items: center;
         background-color:#444444;
+        width:80%;
+        height:80%;
     }
-    .hex
+    .num
     {
-        display: flex;
-        clip-path: polygon(0% 25%, 0% 75%, 50% 100%, 100% 75%, 100% 25%, 50% 0%);
-        box-sizing:border-box;
         font-family: Arial, Helvetica, sans-serif;
+        font-size: calc(var(--oneHexHeight) * 0.4);
         font-weight: bold;
-        font-size: large;
-        justify-content: center;
-        align-items: center;
-        background-color:#444444;
     }
-    .buttonbar
+    .nexus
+    {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: calc(var(--oneHexHeight) * 0.5);
+        font-weight: bolder;
+    }
+    .menuBar
     {
         display: flex;
         justify-content: center;
         align-items: center;
-        height:4vmin;
+        flex-wrap: wrap;
+        width: 100%;
+        height:5vh;
     }
-    .buttonbar > .button
+    .menuBarElement
+    {
+        display: flex;
+        flex-direction: row;
+        align-content: center;
+        justify-content: center;
+        font-size: 2.5vh;
+        font-family: Arial, Helvetica, sans-serif;
+        margin-left:2mm;
+        margin-right:2mm;
+    }
+    .dropdown
+    {
+        box-sizing: border-box;
+        width: auto;
+        border-style: solid;
+        border-color: #EEEEEE;
+        border-width: 2px;
+        background-color:#444444;
+        color: #EEEEEE;
+    }
+    .menuBarButton
     {
         box-sizing: border-box;
         width: auto;
@@ -540,16 +587,42 @@
         align-items: center;
         justify-content: center;
         position: absolute;
-        width: 100vmin;
-        height: 100vmin;
+        width: 100%;
+        height: 100%;
     }
     .popup
     {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
         text-align: center;
         position: absolute;
         background-color: #000000;
         opacity: 75%;
         pointer-events: all;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: medium;
+        max-height: 90%;
+    }
+    .popupParagraph
+    {
+        width: 80%;
+        height: 80%;
+        scroll-behavior: auto;
+        overflow-y: scroll;
+        font-size: 2vh;
+    }
+    .popupButton
+    {
+        box-sizing: border-box;
+        width: auto;
+        border-style: solid;
+        border-color: #EEEEEE;
+        border-width: 2px;
+        background-color:#444444;
+        color: #EEEEEE;
+        font-size: 4vh;
     }
     .hiddenPopup
     {
@@ -559,48 +632,55 @@
 </style>
 <body>
 <h1>WAYSTONES</h1>
-<div id = "thecontentframe" class = "contentframe">
-    <div id = "thehexgrid" class = "hexgrid">
+<div id = "thecontentframe" class = "contentFrame">
+    <div id = "thehexgrid" class = "hexGrid">
     </div>
-    <div class = "buttonbar">
-        <label for="widthSelector">Width:</label>
-        <select id="widthSelector">
-            <option value="6" selected="selected">6</option>
-            <option value="8">8</option>
-            <option value="10">10</option>
-            <option value="12">12</option>
-        </select>
-        <label for="heightSelector">Height:</label>
-        <select id="heightSelector">
-            <option value="6" selected="selected">6</option>
-            <option value="8">8</option>
-            <option value="10">10</option>
-            <option value="12">12</option>
-        </select>
-        <label for="numColorsSelector">Num Colors:</label>
-        <select id="numColorsSelector">
-            <option value="2" selected="selected">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-        </select>
-        <label for="fillModeSelector">Difficulty:</label>
-        <select id ="fillModeSelector">
-            <option value="1" selected="selected">Easy</option>
-            <option value="2">Medium</option>
-            <option value="3">Hard</option>
-        </select>
-    </div>
-    <div class="buttonbar">
-        <button class = "button" id = "button_startover" onclick="restartGame()">New Puzzle</button>
-        <button class = "button" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
+    <div class = "menuBar">
+        <span class = "menuBarElement">
+            <label for="widthSelector">Width</label>
+            <select id="widthSelector" class = "dropdown menuBarElement">
+                <option value="6" selected="selected">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+            </select>
+        </span>
+        <span class = "menuBarElement">
+            <label for="heightSelector">Height</label>
+            <select id="heightSelector" class = "dropdown menuBarElement">
+                <option value="6" selected="selected">6</option>
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+            </select>
+        </span>
+        <span class = "menuBarElement">
+            <label for="numColorsSelector">Colors</label>
+            <select id="numColorsSelector" class = "dropdown menuBarElement">
+                <option value="2" selected="selected">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+            </select>
+        </span>
+        <span class = "menuBarElement">
+            <label for="fillModeSelector">Difficulty</label>
+            <select id ="fillModeSelector" class = "dropdown menuBarElement">
+                <option value="1" selected="selected">Easy</option>
+                <option value="2">Medium</option>
+                <option value="3">Hard</option>
+            </select>
+        </span>
+        <button class = "menuBarButton menuBarElement" id = "button_startover" onclick="restartGame()">New Puzzle</button>
+        <button class = "menuBarButton menuBarElement" id = "button_showsolution" onclick="solveGrid()">Solve Puzzle</button>
     </div>
     <div class="popupContainerContainer">
         <div class="popupContainer">
             <div id = "winPopup" class = "popup hiddenPopup"><h2>SOLVED</h2></div>
             <div id = "startPopup" class = "popup">
                 <h2>How to Play</h2>
+                <div class = "popupParagraph">
                 <p>
                     Each hexagon has a color and a number.
                     One hexagon of each color is the neXus (the one with the X on it).
@@ -624,13 +704,13 @@
                 <p>
                     Good luck and have fun!
                 </p>
-                <button onclick="document.getElementById('startPopup').classList.add('hiddenPopup')">
+                </div>
+                <button class="popupButton" onclick="document.getElementById('startPopup').classList.add('hiddenPopup')">
                     Close Instructions
                 </button>
             </div>
         </div>
     </div>
-</div>
 </div>
 </body>
 </html>
