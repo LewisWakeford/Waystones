@@ -4,6 +4,11 @@
     <title>WAYSTONES</title>
 </head>
 <script>
+
+    const saveStateAssign = ":";
+    const saveStateDelim = "|";
+    const saveStateVersion = 100;
+
     let theSolvedGrid = [];
     let theActiveGrid = [];
     let theNexusCoords = [];
@@ -29,6 +34,232 @@
         "#5D5D1B",
         "#5D1B5D",
         "#1B5D5D"];
+
+    function getSaveStateAsString()
+    {
+        let stateString = "";
+        //will store as cookie
+        //therefore these are disallowed:semi-colon,comma,whitespace,equals
+
+        stateString += "v" + saveStateAssign + saveStateVersion + saveStateDelim;
+        stateString += "w" + saveStateAssign + theWidth + saveStateDelim;
+        stateString += "h" + saveStateAssign + theHeight + saveStateDelim;
+        stateString += "c" + saveStateAssign + theNumColors + saveStateDelim;
+        stateString += "d" + saveStateAssign + theFillMode + saveStateDelim;
+
+        let numHexes = theWidth * theHeight;
+
+        stateString += "s" + saveStateAssign;
+
+        for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx) {
+            let hexData = theSolvedGrid[hexIdx];
+            stateString += hexData.hexColorIdx.toString(16);
+
+            let hexNumString = hexData.hexNum.toString(16);
+
+            if(hexNumString.length === 1)
+            {
+                stateString += '0';
+            }
+
+            stateString += hexNumString;
+        }
+
+        stateString += saveStateDelim;
+        stateString += "a" + saveStateAssign;
+
+        for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx) {
+            let hexData = theActiveGrid[hexIdx];
+            stateString += hexData.hexColorIdx.toString(16);
+
+            let hexNumString = hexData.hexNum.toString(16);
+
+            if(hexNumString.length === 1)
+            {
+                stateString += '0';
+            }
+
+            stateString += hexNumString;
+        }
+
+        //stateString += saveStateDelim;
+
+        return stateString;
+    }
+
+    function setHexGridFromString(gridArray, nexusArray, gridString)
+    {
+        if(isNaN(theWidth) || isNaN(theHeight) || isNaN(theNumColors))
+        {
+            return false;
+        }
+
+        let numHexes = theWidth * theHeight;
+
+        if(numHexes < 16 || numHexes > 255)
+        {
+            return false;
+        }
+
+        if(gridString.length !== numHexes * 3)
+        {
+            return false;
+        }
+
+        for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx)
+        {
+            let colorIdxTxt = gridString.substring((hexIdx * 3), (hexIdx * 3) + 1);
+            let colorIdx = parseInt(colorIdxTxt);
+            let distanceTxt = gridString.substring((hexIdx * 3) + 1, (hexIdx * 3) + 3);
+            let distance = parseInt("0x" + distanceTxt);
+
+            if(isNaN(colorIdx) || isNaN(distance))
+            {
+                return false;
+            }
+
+            gridArray[hexIdx] = {hexColorIdx: colorIdx, hexNum: distance};
+
+            if(nexusArray !== null && distance === 0)
+            {
+                if(nexusArray[colorIdx] === undefined)
+                {
+                    nexusArray[colorIdx] = hexIdx;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+
+    function setHexStateFromString(stateString)
+    {
+        theWidth = NaN;
+        theHeight = NaN;
+        theFillMode = NaN;
+        theNumColors = NaN;
+        theActiveGrid = [];
+        theSolvedGrid = [];
+        theNexusCoords = [];
+        theSolvedState = false;
+
+        let keyValuePairs = stateString.split(saveStateDelim);
+        let readVersion = "";
+
+        let firstKeyAndValue = keyValuePairs[0].split(saveStateAssign);
+
+        if(firstKeyAndValue.length !== 2 || firstKeyAndValue[0] !== 'v')
+        {
+            return false;
+        }
+
+        readVersion = firstKeyAndValue[1];
+
+        //If there ends up being different save data versions, handle that here
+        for(let pairIdx = 1; pairIdx < keyValuePairs.length; ++pairIdx)
+        {
+            let keyAndValue = keyValuePairs[pairIdx].split(saveStateAssign);
+
+            if(keyAndValue.length !== 2)
+            {
+                return false;
+            }
+
+            let key = keyAndValue[0];
+            let value = keyAndValue[1];
+
+            if(key === 'w')
+            {
+                theWidth = parseInt(value);
+
+                if(isNaN(theWidth))
+                {
+                    return false;
+                }
+            }
+            else if(key === 'h')
+            {
+                theHeight = parseInt(value);
+
+                if(isNaN(theHeight))
+                {
+                    return false;
+                }
+            }
+            else if(key === 'c')
+            {
+                theNumColors = parseInt(value);
+
+                if(isNaN(theNumColors))
+                {
+                    return false;
+                }
+            }
+            else if(key === 'd')
+            {
+                theFillMode = parseInt(value);
+
+                if(isNaN(theFillMode))
+                {
+                    return false;
+                }
+            }
+            else if(key === 's')
+            {
+                setHexGridFromString(theSolvedGrid, theNexusCoords, value);
+            }
+            else if(key === 'a')
+            {
+                setHexGridFromString(theActiveGrid, null, value);
+            }
+        }
+
+        document.getElementById("widthSelector").value = theWidth;
+        document.getElementById("heightSelector").value = theHeight;
+        document.getElementById("numColorsSelector").value = theNumColors;
+        document.getElementById("fillModeSelector").value = theFillMode;
+
+        return true;
+    }
+
+    function saveStateToCookie() {
+        const expirationDays = 7;
+        let expiration = new Date();
+        expiration.setTime(expiration.getTime() + (expirationDays * 24 * 60 * 60 * 1000));
+        let endStr = ";expires=" + expiration.toUTCString() + ";path=/";
+
+        document.cookie = "saveState=" + getSaveStateAsString() + endStr;
+    }
+
+    function loadStateFromCookie()
+    {
+        let cookies = document.cookie.split(';');
+
+        for(let cookieIdx = 0; cookieIdx < cookies.length; ++cookieIdx)
+        {
+            let cookie = cookies[cookieIdx];
+            if(cookie !== undefined && cookie.includes('='))
+            {
+                let keyValue = cookie.split('=');
+
+                if(keyValue.length === 2)
+                {
+                    let key = keyValue[0].trim();
+                    let value = keyValue[1].trim();
+
+                    if(key === 'saveState')
+                    {
+                        return setHexStateFromString(value);
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
 
     function hexIndexToXY(hexIdx)
     {
@@ -172,6 +403,7 @@
                     updateHexElement(theSelectedHexIdx);
 
                     checkForSolve();
+                    saveStateToCookie();
                 }
                 else
                 {
@@ -356,19 +588,8 @@
         }
     }
 
-    function restartGame()
+    function createGridElements()
     {
-        if(theSolvedState){
-            document.getElementById("winPopup").classList.add("hiddenPopup");
-        }
-        theSolvedState = false;
-        theWidth = Number(document.getElementById("widthSelector").value);
-        theHeight = Number(document.getElementById("heightSelector").value);
-        theNumColors = Number(document.getElementById("numColorsSelector").value);
-        theFillMode = Number(document.getElementById("fillModeSelector").value);
-        makeNewSolution();
-        initActiveGrid();
-
         //Wipe existing grid
         const hexGrid = document.getElementById('thehexgrid');
 
@@ -416,6 +637,24 @@
         }
     }
 
+    function restartGame()
+    {
+        if(theSolvedState){
+            document.getElementById("winPopup").classList.add("hiddenPopup");
+        }
+        theSolvedState = false;
+        theWidth = Number(document.getElementById("widthSelector").value);
+        theHeight = Number(document.getElementById("heightSelector").value);
+        theNumColors = Number(document.getElementById("numColorsSelector").value);
+        theFillMode = Number(document.getElementById("fillModeSelector").value);
+        makeNewSolution();
+        initActiveGrid();
+
+        createGridElements();
+
+        saveStateToCookie();
+    }
+
     function solveGrid() {
         let numHexes = theWidth * theHeight;
         for(let hexIdx = 0; hexIdx < numHexes; ++hexIdx) {
@@ -425,9 +664,23 @@
             updateHexElement(hexIdx);
         }
         checkForSolve();
+        saveStateToCookie();
     }
 
-    window.onload = function(){restartGame();};
+    function onLoad()
+    {
+        if(loadStateFromCookie())
+        {
+            createGridElements();
+            checkForSolve();
+        }
+        else
+        {
+            restartGame();
+        }
+    }
+
+    window.onload = function(){onLoad();};
 </script>
 <style>
     :root{
