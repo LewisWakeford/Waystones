@@ -21,19 +21,29 @@
     let theSelectedHexIdx = undefined;
     let brightColorValues = [
         "#BA3636",
-        "#36BA36",
+        "#366636",
         "#3636BA",
-        "#BABA36",
+        "#DDDD00",
         "#BA36BA",
-        "#36BABA"];
+        "#36BABA",
+        "#FFAA00",
+        "#36FF00",
+        "#4B3636",
+        "#AAAACC",
+    ];
 
     let dullColorValues = [
         "#5D1B1B",
-        "#1B5D1B",
+        "#1B331B",
         "#1B1B5D",
-        "#5D5D1B",
+        "#6E6E00",
         "#5D1B5D",
-        "#1B5D5D"];
+        "#1B5D5D",
+        "#7F5500",
+        "#1B8800",
+        "#251B1B",
+        "#555566",
+    ];
 
     function getSaveStateAsString()
     {
@@ -881,6 +891,10 @@
     {
         visibility: hidden;
     }
+    .victory
+    {
+        font-size: 20vmin;
+    }
 
 </style>
 <body>
@@ -892,6 +906,7 @@
         <span class = "menuBarElement">
             <label for="widthSelector">Width</label>
             <select id="widthSelector" class = "dropdown menuBarElement">
+                <option value="4">4</option>
                 <option value="6" selected="selected">6</option>
                 <option value="8">8</option>
                 <option value="10">10</option>
@@ -901,6 +916,7 @@
         <span class = "menuBarElement">
             <label for="heightSelector">Height</label>
             <select id="heightSelector" class = "dropdown menuBarElement">
+                <option value="4">4</option>
                 <option value="6" selected="selected">6</option>
                 <option value="8">8</option>
                 <option value="10">10</option>
@@ -915,14 +931,18 @@
                 <option value="4">4</option>
                 <option value="5">5</option>
                 <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
             </select>
         </span>
         <span class = "menuBarElement">
-            <label for="fillModeSelector">Difficulty</label>
+            <label for="fillModeSelector">Grid Style</label>
             <select id ="fillModeSelector" class = "dropdown menuBarElement">
-                <option value="1" selected="selected">Easy</option>
-                <option value="2">Medium</option>
-                <option value="3">Hard</option>
+                <option value="1" selected="selected">Clustered</option>
+                <option value="2">Blended</option>
+                <option value="3">Scrambled</option>
             </select>
         </span>
         <button class = "menuBarButton menuBarElement" id = "button_startover" onclick="restartGame()">New Puzzle</button>
@@ -930,7 +950,7 @@
     </div>
     <div class="popupContainerContainer">
         <div class="popupContainer">
-            <div id = "winPopup" class = "popup hiddenPopup"><h2>SOLVED</h2></div>
+            <div id = "winPopup" class = "popup hiddenPopup"><h2 class="victory">SOLVED</h2></div>
             <div id = "startPopup" class = "popup">
                 <h2>How to Play</h2>
                 <div class = "popupParagraph">
@@ -949,10 +969,8 @@
                 </p>
                 <p>
                     Settings can be adjusted beneath the grid.
-                    Currently they are set to an easy tutorial game with just two colors.
-                    It is recommended to move up to three colors and increase the Difficulty to "Medium" once you understand the rules for a reasonable challenge,
-                    then change the Difficulty to "Hard" once you've really gotten the hang of the game.
-                    After that, feel free to start messing around with more complex grids.
+                    Currently they are set to a simple tutorial game with just two colors.
+                    Once you've got the hang of things, you can experiment with different grid sizes, more colors, or different grid styles.
                 </p>
                 <p>
                     Good luck and have fun!
